@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>aila4cuts Photobooth</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+
+:root{
+--main:#d17a8e;
+--light:#ffceda;
+--dark:#8B0000;
+}
+
+body{
+margin:0;
+background:#fdf9f9;
+
+font-family:
+-apple-system,
+BlinkMacSystemFont,
+"SF Pro Display",
+"SF Pro Text",
+Helvetica,
+Arial,
+sans-serif;
+
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+}
+
+.container{
+max-width:1200px;
+width:100%;
+padding:20px;
+text-align:center;
+}
+
+h1{
+color:var(--main);
+margin-bottom:10px;
+}
+
+.section-title{
+font-weight:700;
+margin-top:20px;
+margin-bottom:8px;
+color:#444;
+}
+
+.page{display:none;}
+.page.active{display:block;}
+
+.fullscreen{
+position:fixed;
+top:15px;
+right:15px;
+padding:10px 16px;
+background:black;
+color:white;
+border:none;
+border-radius:20px;
+cursor:pointer;
+}
+
+.booth{
+display:flex;
+gap:30px;
+flex-wrap:wrap;
+justify-content:center;
+margin-top:10px;
+}
+
+.video-box{
+width:640px;
+aspect-ratio:4/3;
+background:black;
+border:10px solid white;
+position:relative;
+overflow:hidden;
+}
+
+video{
+width:100%;
+height:100%;
+object-fit:cover;
+transform:scaleX(-1);
+}
+
+.countdown{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:120px;
+color:white;
+font-weight:bold;
+display:none;
+}
+
+.strip-preview{
+width:220px;
+background:var(--dark);
+padding:25px 12px 12px;
+border-radius:6px;
+position:relative;
+overflow:hidden;
+}
+
+.strip-preview img{
+width:100%;
+height:150px;
+object-fit:cover;
+margin-bottom:8px;
+background:#333;
+}
+
+#finalImages{
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+#overlayPreview{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:contain;
+pointer-events:none;
+display:none;
+z-index:10;
+}
+
+.controls{
+margin-top:20px;
+}
+
+button{
+padding:14px 26px;
+border-radius:40px;
+border:none;
+cursor:pointer;
+font-weight:bold;
+margin:5px;
+}
+
+.capture{
+background:var(--main);
+color:white;
+}
+
+.next{
+background:#4CAF50;
+color:white;
+display:none;
+}
+
+.panel{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:20px;
+margin-top:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+
+input,select{
+width:100%;
+padding:8px;
+margin-top:5px;
+margin-bottom:10px;
+}
+
+.download-btn{
+background:var(--light);
+color:#c45b74;
+width:100%;
+}
+
+#qrcode{
+margin-top:10px;
+display:inline-block;
+background:white;
+padding:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<button class="fullscreen" id="fullscreenBtn">Full View</button>
+
+<div class="container">
+
+<h1>aila4cuts Photobooth</h1>
+
+<!-- CAMERA PAGE -->
+
+<div id="cameraPage" class="page active">
+
+<div class="section-title">Camera Filters</div>
+
+<select id="filterSelect">
+
+<option value="none">Normal</option>
+<option value="grayscale(1)">B&W</option>
+<option value="brightness(1.2) contrast(1.1) saturate(1.2)">Bright</option>
+<option value="sepia(.8)">Sepia</option>
+<option value="contrast(1.1) saturate(.9) brightness(.9) sepia(.3)">Vintage</option>
+<option value="brightness(1.15) contrast(1.05) saturate(1.1)">Soft Bright</option>
+
+</select>
+
+<div class="booth">
+
+<div class="video-box">
+
+<video id="video" autoplay playsinline></video>
+
+<div class="countdown" id="countdown">3</div>
+
+</div>
+
+<div>
+
+<div class="section-title">Preview Strip</div>
+
+<div class="strip-preview" id="previewStrip">
+
+<img>
+<img>
+<img>
+<img>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="controls">
+
+<button id="captureBtn" class="capture">Start Capture</button>
+
+<button id="nextBtn" class="next">Next: Personalize</button>
+
+</div>
+
+</div>
+
+<!-- PERSONALIZE PAGE -->
+
+<div id="customPage" class="page">
+
+<div class="panel">
+
+<div class="card">
+
+<h3>Strip Settings</h3>
+
+<label>Strip Background Color</label>
+
+<input type="color" id="stripColor" value="#8B0000">
+
+<label>Upload Layout Template (PNG)</label>
+
+<input type="file" id="layoutUpload" accept="image/png">
+
+<button onclick="location.reload()">Retake Photos</button>
+
+</div>
+
+<div class="card">
+
+<h3>Strip Preview</h3>
+
+<div class="strip-preview" id="finalStrip">
+
+<div id="finalImages"></div>
+
+<img id="overlayPreview">
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Download & Share</h3>
+
+<button id="downloadStrip" class="download-btn">Download Photostrip</button>
+
+<div id="qrcode"></div>
+
+<p style="font-size:12px">Scan QR to download</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const video=document.getElementById("video")
+const captureBtn=document.getElementById("captureBtn")
+const nextBtn=document.getElementById("nextBtn")
+const countdown=document.getElementById("countdown")
+const previewImgs=document.querySelectorAll("#previewStrip img")
+
+let overlayImg=new Image()
+
+/* CAMERA */
+
+async function startCamera(){
+const stream=await navigator.mediaDevices.getUserMedia({video:true})
+video.srcObject=stream
+}
+
+startCamera()
+
+/* FILTER */
+
+document.getElementById("filterSelect").addEventListener("change",e=>{
+video.style.filter=e.target.value
+})
+
+/* CAPTURE */
+
+captureBtn.onclick=async()=>{
+
+for(let i=0;i<4;i++){
+
+countdown.style.display="block"
+
+for(let c=3;c>0;c--){
+countdown.innerText=c
+await new Promise(r=>setTimeout(r,1000))
+}
+
+countdown.style.display="none"
+
+const canvas=document.createElement("canvas")
+canvas.width=1200
+canvas.height=900
+
+const ctx=canvas.getContext("2d")
+
+ctx.filter=video.style.filter
+
+ctx.translate(canvas.width,0)
+ctx.scale(-1,1)
+
+ctx.drawImage(video,0,0,canvas.width,canvas.height)
+
+previewImgs[i].src=canvas.toDataURL()
+
+}
+
+nextBtn.style.display="inline-block"
+
+}
+
+/* NEXT PAGE */
+
+nextBtn.onclick=()=>{
+
+document.getElementById("cameraPage").classList.remove("active")
+document.getElementById("customPage").classList.add("active")
+
+const finalImages=document.getElementById("finalImages")
+
+finalImages.innerHTML=document.getElementById("previewStrip").innerHTML
+
+}
+
+/* STRIP COLOR */
+
+document.getElementById("stripColor").oninput=e=>{
+document.querySelectorAll(".strip-preview").forEach(s=>{
+s.style.background=e.target.value
+})
+}
+
+/* OVERLAY UPLOAD */
+
+document.getElementById("layoutUpload").addEventListener("change",function(e){
+
+const file=e.target.files[0]
+if(!file)return
+
+const reader=new FileReader()
+
+reader.onload=function(event){
+
+overlayImg.src=event.target.result
+
+const overlay=document.getElementById("overlayPreview")
+overlay.src=event.target.result
+overlay.style.display="block"
+
+}
+
+reader.readAsDataURL(file)
+
+})
+
+/* DOWNLOAD STRIP */
+
+document.getElementById("downloadStrip").onclick=()=>{
+
+const canvas=document.createElement("canvas")
+
+canvas.width=1000
+canvas.height=3200
+
+const ctx=canvas.getContext("2d")
+
+ctx.fillStyle=document.getElementById("stripColor").value
+ctx.fillRect(0,0,1000,3200)
+
+/* photos */
+
+const photos=document.querySelectorAll("#finalImages img")
+
+const positions=[400,1080,1760,2440]
+
+photos.forEach((img,i)=>{
+ctx.drawImage(img,80,positions[i],840,600)
+})
+
+ctx.fillStyle="#ffceda"
+ctx.font="bold 36px Arial"
+ctx.textAlign="center"
+
+ctx.fillText("@aila4cuts",500,3120)
+
+/* overlay */
+
+if(overlayImg.src){
+ctx.drawImage(overlayImg,0,0,1000,3200)
+}
+
+const data=canvas.toDataURL()
+
+const link=document.createElement("a")
+
+link.download="aila4cuts_strip.png"
+link.href=data
+link.click()
+
+/* QR */
+
+document.getElementById("qrcode").innerHTML=""
+
+new QRCode(document.getElementById("qrcode"),{
+text:data,
+width:120,
+height:120
+})
+
+}
+
+/* FULLSCREEN */
+
+document.getElementById("fullscreenBtn").onclick=()=>{
+
+if(!document.fullscreenElement){
+document.documentElement.requestFullscreen()
+}else{
+document.exitFullscreen()
+}
+
+}
+
+</script>
+
+</body>
+</html>
