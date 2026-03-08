@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <title>aila4cuts Photobooth</title>
 
@@ -48,8 +48,13 @@ margin:15px 0 10px;
 color:#444;
 }
 
-.page{display:none;}
-.page.active{display:block;}
+.page{
+display:none;
+}
+
+.page.active{
+display:block;
+}
 
 .fullscreen{
 position:fixed;
@@ -61,7 +66,7 @@ color:white;
 border:none;
 border-radius:20px;
 cursor:pointer;
-z-index:20;
+z-index:50;
 }
 
 /* BOOTH LAYOUT */
@@ -83,8 +88,8 @@ aspect-ratio:4/3;
 background:black;
 border:10px solid white;
 border-radius:10px;
-position:relative;
 overflow:hidden;
+position:relative;
 }
 
 video{
@@ -93,8 +98,6 @@ height:100%;
 object-fit:cover;
 transform:scaleX(-1);
 }
-
-/* COUNTDOWN */
 
 .countdown{
 position:absolute;
@@ -113,7 +116,7 @@ display:none;
 width:220px;
 aspect-ratio:1/3.2;
 background:var(--dark);
-padding:20px 12px 12px;
+padding:18px 10px;
 border-radius:10px;
 position:relative;
 overflow:hidden;
@@ -128,7 +131,7 @@ background:#333;
 border-radius:4px;
 }
 
-/* OVERLAY */
+/* BORDER OVERLAY */
 
 #overlayPreview{
 position:absolute;
@@ -142,7 +145,7 @@ display:none;
 z-index:10;
 }
 
-/* BUTTONS */
+/* CONTROLS */
 
 .controls{
 margin-top:25px;
@@ -213,13 +216,10 @@ width:100%;
 max-width:600px;
 }
 
-.strip-preview{
-margin:auto;
-}
-
 }
 
 </style>
+
 </head>
 
 <body>
@@ -237,31 +237,34 @@ margin:auto;
 <div class="section-title">Camera Filters</div>
 
 <select id="filterSelect">
-
 <option value="none">Normal</option>
 <option value="grayscale(1)">B&W</option>
 <option value="brightness(1.2) contrast(1.1) saturate(1.2)">Bright</option>
 <option value="sepia(.8)">Sepia</option>
 <option value="contrast(1.1) saturate(.9) brightness(.9) sepia(.3)">Vintage</option>
 <option value="brightness(1.15) contrast(1.05) saturate(1.1)">Soft Bright</option>
-
 </select>
 
 <div class="booth">
 
 <div class="video-box">
+
 <video id="video" autoplay playsinline></video>
 <div class="countdown" id="countdown">3</div>
+
 </div>
 
 <div>
+
 <div class="section-title">Preview Strip</div>
 
 <div class="strip-preview" id="previewStrip">
+
 <img>
 <img>
 <img>
 <img>
+
 </div>
 
 </div>
@@ -290,7 +293,7 @@ margin:auto;
 <label>Strip Background Color</label>
 <input type="color" id="stripColor" value="#8B0000">
 
-<label>Upload Layout Template (PNG)</label>
+<label>Upload Layout Border (PNG)</label>
 <input type="file" id="layoutUpload" accept="image/png">
 
 <button onclick="location.reload()">Retake Photos</button>
@@ -317,6 +320,7 @@ margin:auto;
 <button id="downloadStrip" class="download-btn">Download Photostrip</button>
 
 <div id="qrcode"></div>
+
 <p style="font-size:12px">Scan QR to download</p>
 
 </div>
@@ -329,6 +333,8 @@ margin:auto;
 
 <script>
 
+/* ELEMENTS */
+
 const video=document.getElementById("video")
 const captureBtn=document.getElementById("captureBtn")
 const nextBtn=document.getElementById("nextBtn")
@@ -337,7 +343,7 @@ const previewImgs=document.querySelectorAll("#previewStrip img")
 
 let overlayImg=new Image()
 
-/* CAMERA */
+/* START CAMERA */
 
 async function startCamera(){
 
@@ -413,22 +419,28 @@ s.style.background=e.target.value
 })
 }
 
-/* OVERLAY */
+/* UPLOAD BORDER */
 
 document.getElementById("layoutUpload").addEventListener("change",function(e){
 
 const file=e.target.files[0]
-if(!file) return
+if(!file)return
 
 const reader=new FileReader()
 
 reader.onload=function(event){
 
-overlayImg.src=event.target.result
+overlayImg=new Image()
+
+overlayImg.onload=function(){
 
 const overlay=document.getElementById("overlayPreview")
 overlay.src=overlayImg.src
 overlay.style.display="block"
+
+}
+
+overlayImg.src=event.target.result
 
 }
 
@@ -461,8 +473,14 @@ ctx.font="bold 36px Arial"
 ctx.textAlign="center"
 ctx.fillText("@aila4cuts",500,3120)
 
+/* DRAW BORDER LAST */
+
 if(overlayImg.complete){
-ctx.drawImage(overlayImg,0,0,1000,3200)
+ctx.drawImage(
+overlayImg,
+0,0,overlayImg.width,overlayImg.height,
+0,0,1000,3200
+)
 }
 
 const data=canvas.toDataURL()
