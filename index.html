@@ -18,29 +18,22 @@
 --dark:#8B0000;
 }
 
+*{
+box-sizing:border-box;
+}
+
 body{
 margin:0;
 background:#fdf9f9;
-
-font-family:
--apple-system,
-BlinkMacSystemFont,
-"SF Pro Display",
-"SF Pro Text",
-Helvetica,
-Arial,
-sans-serif;
-
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Helvetica,Arial,sans-serif;
 display:flex;
 justify-content:center;
-align-items:center;
-min-height:100vh;
 }
 
 .container{
-max-width:1200px;
+max-width:1100px;
 width:100%;
-padding:20px;
+padding:25px;
 text-align:center;
 }
 
@@ -51,8 +44,7 @@ margin-bottom:10px;
 
 .section-title{
 font-weight:700;
-margin-top:20px;
-margin-bottom:8px;
+margin:15px 0 10px;
 color:#444;
 }
 
@@ -69,21 +61,28 @@ color:white;
 border:none;
 border-radius:20px;
 cursor:pointer;
+z-index:20;
 }
+
+/* BOOTH LAYOUT */
 
 .booth{
 display:flex;
-gap:30px;
-flex-wrap:wrap;
+gap:40px;
 justify-content:center;
+align-items:flex-start;
+flex-wrap:wrap;
 margin-top:10px;
 }
+
+/* CAMERA */
 
 .video-box{
 width:640px;
 aspect-ratio:4/3;
 background:black;
 border:10px solid white;
+border-radius:10px;
 position:relative;
 overflow:hidden;
 }
@@ -94,6 +93,8 @@ height:100%;
 object-fit:cover;
 transform:scaleX(-1);
 }
+
+/* COUNTDOWN */
 
 .countdown{
 position:absolute;
@@ -106,23 +107,25 @@ font-weight:bold;
 display:none;
 }
 
-/* PREVIEW STRIP */
+/* STRIP PREVIEW */
 
 .strip-preview{
 width:220px;
+aspect-ratio:1/3.2;
 background:var(--dark);
-padding:25px 12px 12px;
-border-radius:6px;
+padding:20px 12px 12px;
+border-radius:10px;
 position:relative;
 overflow:hidden;
 }
 
 .strip-preview img{
 width:100%;
-height:150px;
+height:140px;
 object-fit:cover;
 margin-bottom:8px;
 background:#333;
+border-radius:4px;
 }
 
 /* OVERLAY */
@@ -133,15 +136,16 @@ top:0;
 left:0;
 width:100%;
 height:100%;
+object-fit:contain;
 pointer-events:none;
 display:none;
 z-index:10;
 }
 
-/* CONTROLS */
+/* BUTTONS */
 
 .controls{
-margin-top:20px;
+margin-top:25px;
 }
 
 button{
@@ -164,11 +168,13 @@ color:white;
 display:none;
 }
 
+/* PERSONALIZE PAGE */
+
 .panel{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-gap:20px;
-margin-top:20px;
+gap:25px;
+margin-top:25px;
 }
 
 .card{
@@ -196,6 +202,21 @@ margin-top:10px;
 display:inline-block;
 background:white;
 padding:5px;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+
+.video-box{
+width:100%;
+max-width:600px;
+}
+
+.strip-preview{
+margin:auto;
+}
+
 }
 
 </style>
@@ -229,24 +250,18 @@ padding:5px;
 <div class="booth">
 
 <div class="video-box">
-
 <video id="video" autoplay playsinline></video>
-
 <div class="countdown" id="countdown">3</div>
-
 </div>
 
 <div>
-
 <div class="section-title">Preview Strip</div>
 
 <div class="strip-preview" id="previewStrip">
-
 <img>
 <img>
 <img>
 <img>
-
 </div>
 
 </div>
@@ -256,7 +271,6 @@ padding:5px;
 <div class="controls">
 
 <button id="captureBtn" class="capture">Start Capture</button>
-
 <button id="nextBtn" class="next">Next: Personalize</button>
 
 </div>
@@ -274,11 +288,9 @@ padding:5px;
 <h3>Strip Settings</h3>
 
 <label>Strip Background Color</label>
-
 <input type="color" id="stripColor" value="#8B0000">
 
 <label>Upload Layout Template (PNG)</label>
-
 <input type="file" id="layoutUpload" accept="image/png">
 
 <button onclick="location.reload()">Retake Photos</button>
@@ -292,7 +304,6 @@ padding:5px;
 <div class="strip-preview" id="finalStrip">
 
 <div id="finalImages"></div>
-
 <img id="overlayPreview">
 
 </div>
@@ -306,7 +317,6 @@ padding:5px;
 <button id="downloadStrip" class="download-btn">Download Photostrip</button>
 
 <div id="qrcode"></div>
-
 <p style="font-size:12px">Scan QR to download</p>
 
 </div>
@@ -331,7 +341,9 @@ let overlayImg=new Image()
 
 async function startCamera(){
 
-const stream=await navigator.mediaDevices.getUserMedia({video:true})
+const stream=await navigator.mediaDevices.getUserMedia({
+video:{aspectRatio:4/3}
+})
 
 video.srcObject=stream
 
@@ -354,17 +366,13 @@ for(let i=0;i<4;i++){
 countdown.style.display="block"
 
 for(let c=3;c>0;c--){
-
 countdown.innerText=c
-
 await new Promise(r=>setTimeout(r,1000))
-
 }
 
 countdown.style.display="none"
 
 const canvas=document.createElement("canvas")
-
 canvas.width=1200
 canvas.height=900
 
@@ -405,9 +413,12 @@ s.style.background=e.target.value
 })
 }
 
-/* OVERLAY UPLOAD */
+/* OVERLAY */
 
 document.getElementById("layoutUpload").addEventListener("change",function(e){
+
+const file=e.target.files[0]
+if(!file) return
 
 const reader=new FileReader()
 
@@ -416,13 +427,12 @@ reader.onload=function(event){
 overlayImg.src=event.target.result
 
 const overlay=document.getElementById("overlayPreview")
-
-overlay.src=event.target.result
+overlay.src=overlayImg.src
 overlay.style.display="block"
 
 }
 
-reader.readAsDataURL(e.target.files[0])
+reader.readAsDataURL(file)
 
 })
 
@@ -431,7 +441,6 @@ reader.readAsDataURL(e.target.files[0])
 document.getElementById("downloadStrip").onclick=()=>{
 
 const canvas=document.createElement("canvas")
-
 canvas.width=1000
 canvas.height=3200
 
@@ -441,42 +450,34 @@ ctx.fillStyle=document.getElementById("stripColor").value
 ctx.fillRect(0,0,1000,3200)
 
 const photos=document.querySelectorAll("#finalImages img")
-
 const positions=[400,1080,1760,2440]
 
 photos.forEach((img,i)=>{
-
 ctx.drawImage(img,80,positions[i],840,600)
-
 })
 
 ctx.fillStyle="#ffceda"
 ctx.font="bold 36px Arial"
 ctx.textAlign="center"
-
 ctx.fillText("@aila4cuts",500,3120)
 
-if(overlayImg.src){
+if(overlayImg.complete){
 ctx.drawImage(overlayImg,0,0,1000,3200)
 }
 
 const data=canvas.toDataURL()
 
 const link=document.createElement("a")
-
 link.download="aila4cuts_strip.png"
 link.href=data
-
 link.click()
 
 document.getElementById("qrcode").innerHTML=""
 
 new QRCode(document.getElementById("qrcode"),{
-
 text:data,
 width:120,
 height:120
-
 })
 
 }
