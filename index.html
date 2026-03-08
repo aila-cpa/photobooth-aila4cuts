@@ -11,7 +11,7 @@
             --soft-pink: #ffceda;
             --deep-pink: #d17a8e;
             --white: #ffffff;
-            /* Apple-inspired font stack */
+            /* San Francisco / Apple System Font Stack */
             --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
 
@@ -21,26 +21,28 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background: #fdf9f9;
+            background: #fdfefe;
             font-family: var(--apple-font);
             -webkit-font-smoothing: antialiased;
+            color: #1d1d1f;
         }
 
-        .container { text-align: center; width: 100%; max-width: 1200px; padding: 20px; }
+        .container { text-align: center; width: 100%; max-width: 1100px; padding: 20px; }
         
         .brand-title {
             font-size: 42px;
             font-weight: 700;
             color: var(--deep-pink);
-            letter-spacing: -1px;
-            margin-bottom: 25px;
+            letter-spacing: -1.2px;
+            margin-bottom: 30px;
         }
 
-        .page { display: none; animation: fadeIn 0.4s ease; }
+        /* Page Transitions */
+        .page { display: none; animation: fadeIn 0.5s ease; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Main Booth Layout */
+        /* Studio Layout */
         .booth-layout {
             display: flex;
             justify-content: center;
@@ -51,108 +53,112 @@
 
         .video-box {
             position: relative;
-            width: 720px;
-            height: 540px;
+            width: 640px;
+            height: 480px;
             background: #000;
-            border: 12px solid var(--white);
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-radius: 18px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
+            border: 8px solid var(--white);
         }
 
         #video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); transition: filter 0.3s; }
 
-        .countdown-overlay {
+        .countdown {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 180px;
+            font-size: 160px;
             color: white;
             font-weight: 700;
             z-index: 10;
             display: none;
+            text-shadow: 0 0 20px rgba(0,0,0,0.3);
         }
 
-        /* The Strip Preview */
+        /* Photo Strip Preview */
         .strip-preview {
             position: relative;
-            width: 250px;
+            width: 240px;
             background: var(--pica-red);
-            padding: 40px 15px 25px 15px;
+            padding: 35px 14px 25px 14px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.15);
             display: flex;
             flex-direction: column;
             align-items: center;
+            border-radius: 2px;
         }
 
-        .image-strip { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-        .image-strip img { width: 100%; height: 165px; object-fit: cover; background: #222; }
+        .image-strip { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .image-strip img { width: 100%; height: 160px; object-fit: cover; background: #222; }
 
         .watermark {
             margin-top: 15px;
             color: var(--soft-pink);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
-        /* Controls Section */
-        .main-controls {
-            margin-top: 30px;
+        /* UI Elements */
+        .controls-bar {
+            margin-top: 35px;
             display: flex;
             flex-direction: column;
+            gap: 20px;
             align-items: center;
-            gap: 15px;
         }
 
-        .filter-group {
-            background: white;
-            padding: 10px 20px;
+        .filter-pill {
+            background: rgba(0,0,0,0.04);
+            padding: 8px 20px;
             border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        .filter-group label { font-weight: 600; color: #666; font-size: 14px; }
-
-        select, input[type="color"], input[type="file"] {
-            padding: 10px 15px;
-            border-radius: 10px;
-            border: 1px solid #eee;
+        select {
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
             font-family: var(--apple-font);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
             outline: none;
         }
 
         button {
-            padding: 14px 28px;
+            padding: 16px 45px;
             border-radius: 50px;
             border: none;
             cursor: pointer;
             font-weight: 600;
             font-size: 16px;
-            transition: 0.3s;
+            transition: 0.2s;
             font-family: var(--apple-font);
         }
 
-        .btn-capture { background: var(--deep-pink); color: white; padding: 18px 60px; font-size: 18px; }
-        .btn-capture:hover { background: #b05e71; }
-        .btn-next { background: #007aff; color: white; display: none; padding: 18px 50px; }
-        .btn-dl { background: var(--soft-pink); color: var(--deep-pink); width: 100%; margin-top: 10px; }
+        .btn-capture { background: var(--deep-pink); color: white; }
+        .btn-capture:hover { transform: scale(1.02); opacity: 0.9; }
+        .btn-next { background: #0071e3; color: white; display: none; }
 
-        /* Customization Page Grid */
-        .customize-grid {
+        /* Customization Page */
+        .edit-layout {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
             text-align: left;
         }
 
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
-        .card h3 { margin-top: 0; font-weight: 600; color: #333; }
+        .setting-card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .setting-card h3 { margin-top: 0; font-size: 18px; margin-bottom: 20px; }
 
-        #qrcode { margin-top: 15px; background: white; padding: 5px; display: inline-block; }
+        .btn-action { background: #f5f5f7; color: #1d1d1f; width: 100%; margin-bottom: 10px; }
+        .btn-action:hover { background: var(--soft-pink); }
+        
+        #qrcode { margin-top: 20px; background: white; padding: 10px; display: inline-block; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -164,10 +170,10 @@
         <div class="booth-layout">
             <div class="video-box">
                 <video id="video" autoplay playsinline></video>
-                <div id="countdown" class="countdown-overlay">3</div>
+                <div id="countdown" class="countdown">3</div>
             </div>
             
-            <div class="strip-preview">
+            <div class="strip-preview" id="liveStrip">
                 <div class="image-strip" id="stripImages">
                     <img src=""><img src=""><img src=""><img src="">
                 </div>
@@ -175,15 +181,12 @@
             </div>
         </div>
 
-        <div class="main-controls">
-            <div class="filter-group">
-                <label>Filter:</label>
-                <select id="mainFilter">
+        <div class="controls-bar">
+            <div class="filter-pill">
+                <span>Filter</span>
+                <select id="filterSelect">
                     <option value="none">Original</option>
                     <option value="grayscale(1) contrast(1.2)">B&W</option>
                     <option value="brightness(1.2) contrast(1.1) saturate(1.2)">Bright</option>
-                    <option value="sepia(0.6) contrast(1.1)">Sepia</option>
-                    <option value="sepia(0.2) contrast(1.2) brightness(1.1) saturate(0.8)">Vintage</option>
-                    <option value="brightness(1.15) saturate(1.1) contrast(0.9)">Soft Bright</option>
-                </select>
-            </div>
+                    <option value="sepia(0.7) contrast(1.1)">Sepia</option>
+                    <option value="sepia(0.3) contrast(1.2) brightness(1.1) saturate(0
