@@ -1,520 +1,249 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>aila4cuts Photobooth</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --main: #d17a8e;
+            --light: #ffceda;
+            --dark: #8B0000;
+            --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+        }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #fdfefe; font-family: var(--apple-font); display: flex; justify-content: center; color: #1d1d1f; }
+        .container { max-width: 1100px; width: 100%; padding: 25px; text-align: center; }
+        h1 { color: var(--main); font-weight: 700; letter-spacing: -1px; }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        .section-title { font-weight: 600; margin: 15px 0 10px; color: #86868b; font-size: 14px; text-transform: uppercase; }
 
-<title>aila4cuts Photobooth</title>
+        /* BOOTH LAYOUT */
+        .booth { display: flex; gap: 30px; justify-content: center; align-items: flex-start; flex-wrap: wrap; margin-top: 10px; }
+        .video-box { width: 640px; aspect-ratio: 4/3; background: black; border-radius: 18px; overflow: hidden; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .countdown { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 120px; color: white; font-weight: 700; display: none; text-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        /* STRIP PREVIEW */
+        .strip-preview { width: 240px; aspect-ratio: 1/3.2; background: var(--dark); padding: 40px 12px; border-radius: 4px; position: relative; transition: background 0.3s; }
+        .strip-preview.grid-mode { aspect-ratio: 1/1.2; width: 400px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 20px; }
+        
+        .image-container { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .grid-mode .image-container { display: contents; }
+        
+        .strip-preview img.captured-photo { width: 100%; height: 160px; object-fit: cover; background: #333; display: block; }
+        .grid-mode img.captured-photo { height: 140px; }
 
-<style>
+        #overlayPreview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 100; display: none; }
 
-:root{
---main:#d17a8e;
---light:#ffceda;
---dark:#8B0000;
-}
+        /* CONTROLS */
+        button { padding: 14px 28px; border-radius: 40px; border: none; cursor: pointer; font-weight: 600; font-family: var(--apple-font); transition: 0.2s; }
+        .capture { background: var(--main); color: white; font-size: 18px; }
+        .next { background: #0071e3; color: white; display: none; }
+        
+        .panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 25px; text-align: left; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
+        input, select { width: 100%; padding: 12px; margin: 8px 0 18px; border-radius: 10px; border: 1px solid #d2d2d7; font-family: var(--apple-font); }
 
-*{
-box-sizing:border-box;
-}
-
-body{
-margin:0;
-background:#fdf9f9;
-font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Helvetica,Arial,sans-serif;
-display:flex;
-justify-content:center;
-}
-
-.container{
-max-width:1100px;
-width:100%;
-padding:25px;
-text-align:center;
-}
-
-h1{
-color:var(--main);
-margin-bottom:10px;
-}
-
-.section-title{
-font-weight:700;
-margin:15px 0 10px;
-color:#444;
-}
-
-.page{
-display:none;
-}
-
-.page.active{
-display:block;
-}
-
-.fullscreen{
-position:fixed;
-top:15px;
-right:15px;
-padding:10px 16px;
-background:black;
-color:white;
-border:none;
-border-radius:20px;
-cursor:pointer;
-z-index:50;
-}
-
-/* BOOTH LAYOUT */
-
-.booth{
-display:flex;
-gap:40px;
-justify-content:center;
-align-items:flex-start;
-flex-wrap:wrap;
-margin-top:10px;
-}
-
-/* CAMERA */
-
-.video-box{
-width:640px;
-aspect-ratio:4/3;
-background:black;
-border:10px solid white;
-border-radius:10px;
-overflow:hidden;
-position:relative;
-}
-
-video{
-width:100%;
-height:100%;
-object-fit:cover;
-transform:scaleX(-1);
-}
-
-.countdown{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-font-size:120px;
-color:white;
-font-weight:bold;
-display:none;
-}
-
-/* STRIP PREVIEW */
-
-.strip-preview{
-width:220px;
-aspect-ratio:1/3.2;
-background:var(--dark);
-padding:18px 10px;
-border-radius:10px;
-position:relative;
-overflow:hidden;
-}
-
-.strip-preview img{
-width:100%;
-height:140px;
-object-fit:cover;
-margin-bottom:8px;
-background:#333;
-border-radius:4px;
-}
-
-/* BORDER OVERLAY */
-
-#overlayPreview{
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-object-fit:contain;
-pointer-events:none;
-display:none;
-z-index:10;
-}
-
-/* CONTROLS */
-
-.controls{
-margin-top:25px;
-}
-
-button{
-padding:14px 26px;
-border-radius:40px;
-border:none;
-cursor:pointer;
-font-weight:bold;
-margin:5px;
-}
-
-.capture{
-background:var(--main);
-color:white;
-}
-
-.next{
-background:#4CAF50;
-color:white;
-display:none;
-}
-
-/* PERSONALIZE PAGE */
-
-.panel{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-gap:25px;
-margin-top:25px;
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:12px;
-box-shadow:0 4px 10px rgba(0,0,0,0.05);
-}
-
-input,select{
-width:100%;
-padding:8px;
-margin-top:5px;
-margin-bottom:10px;
-}
-
-.download-btn{
-background:var(--light);
-color:#c45b74;
-width:100%;
-}
-
-#qrcode{
-margin-top:10px;
-display:inline-block;
-background:white;
-padding:5px;
-}
-
-/* MOBILE */
-
-@media(max-width:900px){
-
-.video-box{
-width:100%;
-max-width:600px;
-}
-
-}
-
-</style>
-
+        .watermark-text { margin-top: 15px; color: var(--light); font-size: 12px; font-weight: 600; text-align: center; }
+    </style>
 </head>
-
 <body>
 
-<button class="fullscreen" id="fullscreenBtn">Full View</button>
-
 <div class="container">
+    <h1>aila4cuts</h1>
 
-<h1>aila4cuts Photobooth</h1>
+    <div id="cameraPage" class="page active">
+        <div class="section-title">Step 1: Style & Pose</div>
+        <select id="filterSelect">
+            <option value="none">Normal</option>
+            <option value="grayscale(1) contrast(1.2)">B&W</option>
+            <option value="brightness(1.2) saturate(1.2)">Bright</option>
+            <option value="sepia(0.3) contrast(1.1) brightness(0.9)">Vintage</option>
+            <option value="brightness(1.1) contrast(0.9) saturate(1.1)">Soft Bright</option>
+        </select>
 
-<!-- CAMERA PAGE -->
+        <div class="booth">
+            <div class="video-box">
+                <video id="video" autoplay playsinline></video>
+                <div class="countdown" id="countdown">3</div>
+            </div>
+            <div class="strip-preview" id="previewStrip">
+                <div class="image-container" id="imgBox">
+                    <img class="captured-photo"><img class="captured-photo"><img class="captured-photo"><img class="captured-photo">
+                </div>
+                <div class="watermark-text">@aila4cuts</div>
+            </div>
+        </div>
 
-<div id="cameraPage" class="page active">
+        <div style="margin-top:25px;">
+            <button id="captureBtn" class="capture">📸 Start Capture</button>
+            <button id="nextBtn" class="next">Personalize Strip ➔</button>
+        </div>
+    </div>
 
-<div class="section-title">Camera Filters</div>
+    <div id="customPage" class="page">
+        <div class="panel">
+            <div class="card">
+                <h3>Layout & Design</h3>
+                <label>Layout Mode</label>
+                <select id="layoutMode">
+                    <option value="strip">Classic Strip (1x4)</option>
+                    <option value="grid">Photo Grid (2x2)</option>
+                </select>
 
-<select id="filterSelect">
-<option value="none">Normal</option>
-<option value="grayscale(1)">B&W</option>
-<option value="brightness(1.2) contrast(1.1) saturate(1.2)">Bright</option>
-<option value="sepia(.8)">Sepia</option>
-<option value="contrast(1.1) saturate(.9) brightness(.9) sepia(.3)">Vintage</option>
-<option value="brightness(1.15) contrast(1.05) saturate(1.1)">Soft Bright</option>
-</select>
+                <label>Background Color</label>
+                <input type="color" id="stripColor" value="#8B0000">
 
-<div class="booth">
+                <label>Custom Border (PNG Overlay)</label>
+                <input type="file" id="layoutUpload" accept="image/png">
+                
+                <button onclick="location.reload()" style="width:100%; background:#f5f5f7;">↺ Retake All</button>
+            </div>
 
-<div class="video-box">
+            <div class="card" style="display:flex; flex-direction:column; align-items:center;">
+                <h3>Preview</h3>
+                <div class="strip-preview" id="finalStrip">
+                    <div class="image-container" id="finalImages"></div>
+                    <div class="watermark-text">@aila4cuts</div>
+                    <img id="overlayPreview">
+                </div>
+            </div>
 
-<video id="video" autoplay playsinline></video>
-<div class="countdown" id="countdown">3</div>
-
-</div>
-
-<div>
-
-<div class="section-title">Preview Strip</div>
-
-<div class="strip-preview" id="previewStrip">
-
-<img>
-<img>
-<img>
-<img>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="controls">
-
-<button id="captureBtn" class="capture">Start Capture</button>
-<button id="nextBtn" class="next">Next: Personalize</button>
-
-</div>
-
-</div>
-
-<!-- PERSONALIZE PAGE -->
-
-<div id="customPage" class="page">
-
-<div class="panel">
-
-<div class="card">
-
-<h3>Strip Settings</h3>
-
-<label>Strip Background Color</label>
-<input type="color" id="stripColor" value="#8B0000">
-
-<label>Upload Layout Border (PNG)</label>
-<input type="file" id="layoutUpload" accept="image/png">
-
-<button onclick="location.reload()">Retake Photos</button>
-
-</div>
-
-<div class="card">
-
-<h3>Strip Preview</h3>
-
-<div class="strip-preview" id="finalStrip">
-
-<div id="finalImages"></div>
-<img id="overlayPreview">
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h3>Download & Share</h3>
-
-<button id="downloadStrip" class="download-btn">Download Photostrip</button>
-
-<div id="qrcode"></div>
-
-<p style="font-size:12px">Scan QR to download</p>
-
-</div>
-
-</div>
-
-</div>
-
+            <div class="card" style="text-align:center;">
+                <h3>Download</h3>
+                <button id="downloadStrip" style="background:#0071e3; color:white; width:100%; margin-bottom:20px;">Download PNG</button>
+                <div id="qrcode"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-
-/* ELEMENTS */
-
-const video=document.getElementById("video")
-const captureBtn=document.getElementById("captureBtn")
-const nextBtn=document.getElementById("nextBtn")
-const countdown=document.getElementById("countdown")
-const previewImgs=document.querySelectorAll("#previewStrip img")
-
-let overlayImg=new Image()
-
-/* START CAMERA */
-
-async function startCamera(){
-
-const stream=await navigator.mediaDevices.getUserMedia({
-video:{aspectRatio:4/3}
-})
-
-video.srcObject=stream
-
-}
-
-startCamera()
-
-/* FILTER */
-
-document.getElementById("filterSelect").addEventListener("change",e=>{
-video.style.filter=e.target.value
-})
-
-/* CAPTURE */
-
-captureBtn.onclick=async()=>{
-
-for(let i=0;i<4;i++){
-
-countdown.style.display="block"
-
-for(let c=3;c>0;c--){
-countdown.innerText=c
-await new Promise(r=>setTimeout(r,1000))
-}
-
-countdown.style.display="none"
-
-const canvas=document.createElement("canvas")
-canvas.width=1200
-canvas.height=900
-
-const ctx=canvas.getContext("2d")
-
-ctx.filter=video.style.filter
-
-ctx.translate(canvas.width,0)
-ctx.scale(-1,1)
-
-ctx.drawImage(video,0,0,canvas.width,canvas.height)
-
-previewImgs[i].src=canvas.toDataURL()
-
-}
-
-nextBtn.style.display="inline-block"
-
-}
-
-/* NEXT PAGE */
-
-nextBtn.onclick=()=>{
-
-document.getElementById("cameraPage").classList.remove("active")
-document.getElementById("customPage").classList.add("active")
-
-document.getElementById("finalImages").innerHTML=
-document.getElementById("previewStrip").innerHTML
-
-}
-
-/* STRIP COLOR */
-
-document.getElementById("stripColor").oninput=e=>{
-document.querySelectorAll(".strip-preview").forEach(s=>{
-s.style.background=e.target.value
-})
-}
-
-/* UPLOAD BORDER */
-
-document.getElementById("layoutUpload").addEventListener("change",function(e){
-
-const file=e.target.files[0]
-if(!file)return
-
-const reader=new FileReader()
-
-reader.onload=function(event){
-
-overlayImg=new Image()
-
-overlayImg.onload=function(){
-
-const overlay=document.getElementById("overlayPreview")
-overlay.src=overlayImg.src
-overlay.style.display="block"
-
-}
-
-overlayImg.src=event.target.result
-
-}
-
-reader.readAsDataURL(file)
-
-})
-
-/* DOWNLOAD STRIP */
-
-document.getElementById("downloadStrip").onclick=()=>{
-
-const canvas=document.createElement("canvas")
-canvas.width=1000
-canvas.height=3200
-
-const ctx=canvas.getContext("2d")
-
-ctx.fillStyle=document.getElementById("stripColor").value
-ctx.fillRect(0,0,1000,3200)
-
-const photos=document.querySelectorAll("#finalImages img")
-const positions=[400,1080,1760,2440]
-
-photos.forEach((img,i)=>{
-ctx.drawImage(img,80,positions[i],840,600)
-})
-
-ctx.fillStyle="#ffceda"
-ctx.font="bold 36px Arial"
-ctx.textAlign="center"
-ctx.fillText("@aila4cuts",500,3120)
-
-/* DRAW BORDER LAST */
-
-if(overlayImg.complete){
-ctx.drawImage(
-overlayImg,
-0,0,overlayImg.width,overlayImg.height,
-0,0,1000,3200
-)
-}
-
-const data=canvas.toDataURL()
-
-const link=document.createElement("a")
-link.download="aila4cuts_strip.png"
-link.href=data
-link.click()
-
-document.getElementById("qrcode").innerHTML=""
-
-new QRCode(document.getElementById("qrcode"),{
-text:data,
-width:120,
-height:120
-})
-
-}
-
-/* FULLSCREEN */
-
-document.getElementById("fullscreenBtn").onclick=()=>{
-
-if(!document.fullscreenElement){
-document.documentElement.requestFullscreen()
-}else{
-document.exitFullscreen()
-}
-
-}
-
+    const video = document.getElementById("video");
+    const captureBtn = document.getElementById("captureBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const countdown = document.getElementById("countdown");
+    const capturedImgs = []; 
+    let globalOverlay = null;
+
+    async function startCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 960 } });
+        video.srcObject = stream;
+    }
+    startCamera();
+
+    document.getElementById("filterSelect").addEventListener("change", e => { video.style.filter = e.target.value; });
+
+    captureBtn.onclick = async () => {
+        captureBtn.disabled = true;
+        const photos = document.querySelectorAll("#imgBox img");
+        for(let i=0; i<4; i++) {
+            countdown.style.display = "block";
+            for(let c=3; c>0; c--) { countdown.innerText = c; await new Promise(r => setTimeout(r, 1000)); }
+            countdown.style.display = "none";
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 1200; canvas.height = 900;
+            const ctx = canvas.getContext("2d");
+            ctx.filter = video.style.filter;
+            ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const dataUrl = canvas.toDataURL("image/png");
+            photos[i].src = dataUrl;
+            capturedImgs[i] = dataUrl;
+        }
+        nextBtn.style.display = "inline-block";
+        captureBtn.disabled = false;
+        captureBtn.innerText = "Retake Photos";
+    };
+
+    nextBtn.onclick = () => {
+        document.getElementById("cameraPage").classList.remove("active");
+        document.getElementById("customPage").classList.add("active");
+        const finalBox = document.getElementById("finalImages");
+        finalBox.innerHTML = "";
+        capturedImgs.forEach(src => {
+            const img = document.createElement("img");
+            img.src = src;
+            img.className = "captured-photo";
+            finalBox.appendChild(img);
+        });
+    };
+
+    document.getElementById("layoutMode").onchange = e => {
+        const previews = document.querySelectorAll(".strip-preview");
+        previews.forEach(p => {
+            if(e.target.value === 'grid') p.classList.add('grid-mode');
+            else p.classList.remove('grid-mode');
+        });
+    };
+
+    document.getElementById("stripColor").oninput = e => {
+        document.querySelectorAll(".strip-preview").forEach(s => s.style.background = e.target.value);
+    };
+
+    document.getElementById("layoutUpload").onchange = e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = event => {
+            globalOverlay = new Image();
+            globalOverlay.onload = () => {
+                const ov = document.getElementById("overlayPreview");
+                ov.src = globalOverlay.src;
+                ov.style.display = "block";
+            };
+            globalOverlay.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    document.getElementById("downloadStrip").onclick = () => {
+        const isGrid = document.getElementById("layoutMode").value === 'grid';
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        
+        if(isGrid) {
+            canvas.width = 1200; canvas.height = 1500;
+        } else {
+            canvas.width = 1000; canvas.height = 3200;
+        }
+
+        ctx.fillStyle = document.getElementById("stripColor").value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const imgElements = document.querySelectorAll("#finalImages img");
+        imgElements.forEach((img, i) => {
+            if(isGrid) {
+                const x = (i % 2) * 560 + 40;
+                const y = Math.floor(i / 2) * 440 + 60;
+                ctx.drawImage(img, x, y, 520, 390);
+            } else {
+                ctx.drawImage(img, 80, 150 + (i * 720), 840, 630);
+            }
+        });
+
+        ctx.fillStyle = "#ffceda";
+        ctx.font = "bold 30px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("@aila4cuts", canvas.width/2, canvas.height - 40);
+
+        if(globalOverlay) {
+            ctx.drawImage(globalOverlay, 0, 0, canvas.width, canvas.height);
+        }
+
+        const link = document.createElement("a");
+        link.download = "aila4cuts.png";
+        link.href = canvas.toDataURL();
+        link.click();
+    };
 </script>
-
 </body>
 </html>
-```
-
