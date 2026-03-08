@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>aila4cuts - Pro Booth</title>
+    <title>aila4cuts | Photo Booth</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        :root {
+            --pica-red: #8B0000;
+            --soft-pink: #ffceda;
+            --deep-pink: #d17a8e;
+            --white: #ffffff;
+        }
+
         body {
             display: flex;
             justify-content: center;
@@ -13,287 +20,315 @@
             min-height: 100vh;
             margin: 0;
             background: #fdf9f9;
-            font-family: 'Segoe UI', sans-serif;
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: #333;
         }
 
-        .container { text-align: center; max-width: 1100px; }
-        h1 { font-weight: bold; margin-bottom: 20px; color: #ffceda; text-transform: uppercase; letter-spacing: 2px; }
-
-        .header-controls {
-            background: white;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            align-items: center;
+        .container { text-align: center; width: 100%; max-width: 1200px; padding: 20px; }
+        
+        .brand-title {
+            font-size: 42px;
+            font-weight: 900;
+            color: var(--deep-pink);
+            letter-spacing: -1.5px;
+            margin-bottom: 30px;
+            text-shadow: 2.5px 2.5px 0px var(--soft-pink);
         }
 
-        .header-controls input, .header-controls select {
-            padding: 8px;
-            border-radius: 8px;
-            border: 2px solid #ffceda;
-        }
-
-        .layout {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 50px;
-            flex-wrap: wrap;
-        }
+        /* View State Management */
+        .page { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Camera Section */
-        .video-container {
-            width: 500px;
-            height: 375px; /* Standard 4:3 view for easier posing */
-            border: 5px solid #ffceda;
-            border-radius: 10px;
-            overflow: hidden;
-            background: black;
-            position: relative;
-        }
-
-        #video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1);
-        }
-
-        /* PHOTOSTRIP PREVIEW - Styled exactly like the upload */
-        .strip-wrapper {
-            position: relative;
-            width: 180px; /* Slim profile */
-            background: #8B0000; /* Matching the red background in your photo */
-            padding: 35px 12px 60px 12px; /* Top, Left/Right, Bottom padding */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-
-        .image-strip {
+        .booth-layout {
             display: flex;
-            flex-direction: column;
-            gap: 6px; /* TIGHT SPACING between photos */
-        }
-
-        .image-strip img {
-            width: 100%;
-            height: 120px; /* Vertical aspect ratio per frame */
-            background: #444;
-            object-fit: cover;
-            display: block;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-
-        /* Custom Overlay Layer */
-        #layoutOverlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            object-fit: fill;
-            z-index: 10;
-        }
-
-        .controls {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
             justify-content: center;
+            gap: 40px;
+            align-items: flex-start;
+            flex-wrap: wrap;
         }
 
-        button {
-            background: #ffceda;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #d17a8e;
-            transition: 0.3s;
+        .video-box {
+            position: relative;
+            width: 720px;
+            height: 540px;
+            background: #000;
+            border: 10px solid var(--white);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
-        button:hover { background: #ff9fb4; color: white; }
+        #video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        .countdown {
+        .countdown-overlay {
             position: absolute;
-            font-size: 100px;
-            color: white;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
+            font-size: 180px;
+            color: white;
+            font-weight: 900;
+            text-shadow: 0 0 30px rgba(0,0,0,0.5);
+            z-index: 10;
             display: none;
-            z-index: 20;
         }
+
+        /* Photostrip Preview */
+        .strip-preview {
+            position: relative;
+            width: 250px; /* Widened from previous narrow version */
+            background: var(--pica-red);
+            padding: 45px 16px 70px 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            transition: background 0.3s;
+        }
+
+        .image-strip { display: flex; flex-direction: column; gap: 10px; }
+        .image-strip img {
+            width: 100%;
+            height: 165px; /* Wider vertical aspect */
+            background: #222;
+            object-fit: cover;
+        }
+
+        /* Customize Panel */
+        .customize-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .panel-card {
+            background: white;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+
+        .panel-card h3 { margin-top: 0; color: var(--deep-pink); border-bottom: 2px solid var(--soft-pink); padding-bottom: 10px; }
+
+        button {
+            padding: 14px 28px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.2s;
+            margin: 8px 0;
+            width: 100%;
+        }
+
+        .btn-capture { background: var(--deep-pink); color: white; font-size: 22px; width: auto; padding: 20px 60px; }
+        .btn-capture:hover { transform: scale(1.03); background: #b05e71; }
+        
+        .btn-next { background: #4CAF50; color: white; display: none; width: auto; padding: 20px 50px; font-size: 20px; }
+
+        .btn-download { background: var(--soft-pink); color: var(--deep-pink); }
+        .btn-download:hover { background: var(--deep-pink); color: white; }
+
+        input[type="color"], select, input[type="file"] {
+            width: 100%; padding: 12px; margin: 12px 0; border: 2px solid var(--soft-pink); border-radius: 12px; box-sizing: border-box;
+        }
+
+        #qrcode { background: white; padding: 10px; display: inline-block; margin-top: 15px; border: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>PHOTO BOOTH</h1>
+    <div class="brand-title">aila4cuts</div>
 
-    <div class="header-controls">
-        <label>Overlay PNG:</label>
-        <input type="file" id="layoutUpload" accept="image/png">
-        
-        <select id="filterSelect">
-            <option value="none">Normal</option>
-            <option value="brightness(1.2) contrast(1.1) saturate(1.3)">PicaPica (Bright)</option>
-            <option value="grayscale(1)">B&W</option>
-            <option value="brightness(1.1) contrast(1.2) sepia(0.2)">Vintage</option>
-        </select>
-        
-        <label>Strip Color:</label>
-        <input type="color" id="borderColor" value="#8B0000">
-    </div>
-
-    <div class="layout">
-        <div class="camera-side">
-            <div class="video-container">
-                <video id="video" autoplay></video>
-                <div id="countdown" class="countdown">3</div>
+    <div id="cameraPage" class="page active">
+        <div class="booth-layout">
+            <div class="video-box">
+                <video id="video" autoplay playsinline></video>
+                <div id="countdown" class="countdown-overlay">3</div>
             </div>
-            <div class="controls">
-                <button id="start">📸 START SEQUENCE</button>
-                <button id="reset">🔄 RESET</button>
+            
+            <div class="strip-preview" id="previewContainer">
+                <div class="image-strip" id="stripImages">
+                    <img src=""><img src=""><img src=""><img src="">
+                </div>
             </div>
         </div>
 
-        <div class="strip-wrapper" id="captureArea">
-            <div class="image-strip" id="image-strip">
-                <img src="" alt="">
-                <img src="" alt="">
-                <img src="" alt="">
-                <img src="" alt="">
-            </div>
-            <img id="layoutOverlay" src="" style="display: none;">
+        <div style="margin-top: 40px;">
+            <button id="captureBtn" class="btn-capture">📸 TAKE PHOTOS</button>
+            <button id="nextBtn" class="btn-next">GO TO CUSTOMIZE ➔</button>
         </div>
     </div>
 
-    <div class="controls">
-        <button id="download" style="background: #8B0000; color: white;">💾 DOWNLOAD PHOTOSTRIP</button>
-    </div>
+    <div id="customizePage" class="page">
+        <div class="customize-grid">
+            <div class="panel-card">
+                <h3>Style</h3>
+                <label>Strip Color</label>
+                <input type="color" id="stripColor" value="#8B0000">
+                
+                <label>Upload Layout (PNG)</label>
+                <input type="file" id="layoutUpload" accept="image/png">
 
-    <div id="qrcode"></div>
+                <label>Booth Filter</label>
+                <select id="filterSelect">
+                    <option value="none">Standard</option>
+                    <option value="brightness(1.2) contrast(1.1) saturate(1.3)">PicaPica Bright</option>
+                    <option value="grayscale(1) contrast(1.2)">Classic B&W</option>
+                    <option value="brightness(1.3) contrast(0.9) saturate(1.2) sepia(0.1)">Soft Dreamy</option>
+                </select>
+                
+                <button id="backBtn" style="background: #f0f0f0; color: #666; margin-top: 20px;">Return to Camera</button>
+            </div>
+
+            <div class="strip-preview" id="finalPreview">
+                <div class="image-strip" id="finalImages"></div>
+                <img id="overlayImg" src="" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:100;">
+            </div>
+
+            <div class="panel-card" style="text-align: center;">
+                <h3>Get Photos</h3>
+                <button id="downloadStrip" class="btn-download">💾 Download Strip</button>
+                <button id="downloadGif" class="btn-download" style="background: #e1f5fe; color: #0288d1;">🎬 Download Animation</button>
+                <div id="qrcode"></div>
+                <p style="font-size: 11px; color: #999; margin-top: 10px;">SCAN FOR MOBILE ACCESS</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    const video = document.getElementById("video");
-    const startButton = document.getElementById("start");
-    const downloadButton = document.getElementById("download");
-    const resetButton = document.getElementById("reset");
-    const countdown = document.getElementById("countdown");
-    const imageStrip = document.getElementById("image-strip").getElementsByTagName("img");
-    const layoutOverlay = document.getElementById("layoutOverlay");
-    const stripWrapper = document.getElementById("captureArea");
-    const borderColorInput = document.getElementById("borderColor");
+    const video = document.getElementById('video');
+    const captureBtn = document.getElementById('captureBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const countdownEl = document.getElementById('countdown');
+    const stripImgs = document.querySelectorAll('#stripImages img');
+    let capturedFiles = [];
+    let customLayout = new Image();
 
-    let layoutImage = new Image();
+    // Start HD Camera
+    async function initCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1920, height: 1080 }
+        });
+        video.srcObject = stream;
+    }
+    initCamera();
 
-    // Camera Init
-    navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => alert("Camera blocked or not found."));
+    // Capture Logic
+    captureBtn.addEventListener('click', async () => {
+        captureBtn.disabled = true;
+        capturedFiles = [];
 
-    // Filter Logic
-    document.getElementById("filterSelect").addEventListener("change", (e) => {
-        video.style.filter = e.target.value;
-    });
-
-    // Background Color Change
-    borderColorInput.addEventListener("input", (e) => {
-        stripWrapper.style.backgroundColor = e.target.value;
-    });
-
-    // Layout Upload & Overlay
-    document.getElementById("layoutUpload").addEventListener("change", function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            layoutOverlay.src = event.target.result;
-            layoutOverlay.style.display = "block";
-            layoutImage.src = event.target.result;
-        }
-        reader.readAsDataURL(file);
-    });
-
-    async function captureSequence() {
         for (let i = 0; i < 4; i++) {
-            // Countdown
-            countdown.style.display = "block";
-            for(let c = 3; c > 0; c--) {
-                countdown.innerText = c;
+            countdownEl.style.display = 'block';
+            for (let c = 3; c > 0; c--) {
+                countdownEl.innerText = c;
                 await new Promise(r => setTimeout(r, 1000));
             }
-            countdown.style.display = "none";
+            countdownEl.style.display = 'none';
 
-            // Capture
-            const canvas = document.createElement("canvas");
-            canvas.width = 600;
-            canvas.height = 450; 
-            const ctx = canvas.getContext("2d");
-            
-            ctx.filter = video.style.filter || "none";
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
+            const canvas = document.createElement('canvas');
+            canvas.width = 1200; canvas.height = 900;
+            const ctx = canvas.getContext('2d');
+            ctx.filter = video.style.filter || 'none';
+            ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            imageStrip[i].src = canvas.toDataURL("image/png");
+            const data = canvas.toDataURL('image/png');
+            stripImgs[i].src = data;
+            capturedFiles.push(data);
         }
-    }
+        
+        captureBtn.innerText = "RETAKE PHOTOS";
+        captureBtn.disabled = false;
+        nextBtn.style.display = 'inline-block';
+    });
 
-    startButton.addEventListener("click", captureSequence);
+    // Page Switching
+    nextBtn.addEventListener('click', () => {
+        document.getElementById('cameraPage').classList.remove('active');
+        document.getElementById('customizePage').classList.add('active');
+        document.getElementById('finalImages').innerHTML = document.getElementById('stripImages').innerHTML;
+        
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById('qrcode'), {
+            text: window.location.href,
+            width: 120, height: 120
+        });
+    });
 
-    downloadButton.addEventListener("click", () => {
-        if (!imageStrip[0].src) return alert("Take photos first!");
+    document.getElementById('backBtn').addEventListener('click', () => {
+        document.getElementById('customizePage').classList.remove('active');
+        document.getElementById('cameraPage').classList.add('active');
+    });
 
-        const finalCanvas = document.createElement("canvas");
-        const ctx = finalCanvas.getContext("2d");
+    // Customization
+    document.getElementById('stripColor').addEventListener('input', (e) => {
+        document.querySelectorAll('.strip-preview').forEach(s => s.style.backgroundColor = e.target.value);
+    });
 
-        // High Res Dimensions for Printing
-        const sw = 800;  
-        const sh = 2400; 
-        finalCanvas.width = sw;
-        finalCanvas.height = sh;
+    document.getElementById('filterSelect').addEventListener('change', (e) => {
+        video.style.filter = e.target.value;
+        document.querySelectorAll('.image-strip img').forEach(img => img.style.filter = e.target.value);
+    });
 
-        // 1. Background
-        ctx.fillStyle = borderColorInput.value;
-        ctx.fillRect(0, 0, sw, sh);
+    document.getElementById('layoutUpload').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const overlay = document.getElementById('overlayImg');
+            overlay.src = event.target.result;
+            overlay.style.display = 'block';
+            customLayout.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    });
 
-        // 2. Photos with Tight Spacing
-        const imgW = 720; // Leave small margin on sides
-        const imgH = 500;
-        const xPos = (sw - imgW) / 2;
-        const startY = 120; // Top margin
-        const gap = 20;    // Tight gap
+    // Final Download Logic
+    document.getElementById('downloadStrip').addEventListener('click', () => {
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d');
+        c.width = 1200; c.height = 3600;
 
-        for (let i = 0; i < 4; i++) {
-            ctx.drawImage(imageStrip[i], xPos, startY + (i * (imgH + gap)), imgW, imgH);
+        ctx.fillStyle = document.getElementById('stripColor').value;
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        const imgs = document.querySelectorAll('#finalImages img');
+        imgs.forEach((img, i) => {
+            ctx.filter = img.style.filter || 'none';
+            ctx.drawImage(img, 100, 200 + (i * 820), 1000, 750);
+        });
+
+        if (customLayout.src) {
+            ctx.filter = 'none';
+            ctx.drawImage(customLayout, 0, 0, c.width, c.height);
         }
 
-        // 3. Overlay Layout
-        if (layoutImage.src) {
-            ctx.drawImage(layoutImage, 0, 0, sw, sh);
-        }
-
-        // 4. Download
-        const link = document.createElement("a");
-        link.download = "Picapica_Strip.png";
-        link.href = finalCanvas.toDataURL("image/png", 1.0);
+        const link = document.createElement('a');
+        link.download = `aila4cuts_${Date.now()}.png`;
+        link.href = c.toDataURL();
         link.click();
     });
 
-    resetButton.addEventListener("click", () => {
-        for (let img of imageStrip) img.src = "";
+    document.getElementById('downloadGif').addEventListener('click', () => {
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d');
+        c.width = 800; c.height = 600;
+        let count = 0;
+        const timer = setInterval(() => {
+            ctx.drawImage(stripImgs[count % 4], 0, 0, 800, 600);
+            count++;
+            if(count > 12) {
+                clearInterval(timer);
+                const link = document.createElement('a');
+                link.download = 'aila4cuts_animation.png';
+                link.href = c.toDataURL();
+                link.click();
+            }
+        }, 200);
     });
 </script>
-
 </body>
 </html>
